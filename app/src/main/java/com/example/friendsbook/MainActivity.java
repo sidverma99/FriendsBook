@@ -6,6 +6,7 @@ import android.os.Parcelable;
 import android.view.View;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -16,8 +17,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -88,6 +93,37 @@ public class MainActivity extends AppCompatActivity {
         mDatabaseUsersRef.keepSynced(true);
         mDatabaseLikesRef.keepSynced(true);
         rvMainRecyclerView=(RecyclerView)findViewById(R.id.xrvMainRecyclerView);
+        layoutManager=new LinearLayoutManager(this);
+        layoutManager.setReverseLayout(true);
+        layoutManager.setStackFromEnd(true);
+        rvMainRecyclerView.setLayoutManager(layoutManager);
+        mAuth=FirebaseAuth.getInstance();
+        mAuthStateListener=new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                if (firebaseAuth.getCurrentUser()==null){
+                    Intent intent=new Intent(MainActivity.this,LogInActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivity(intent);
+                    finish();
+                }
+            }
+        };
+        mDatabaseUsersRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                FirebaseUser firebaseUser=mAuth.getCurrentUser();
+                if(firebaseUser!=null){
+                    String name=snapshot.child(firebaseUser.getUid()).child("name").getValue(String.class);
+                    String email=snapshot.child(firebaseUser.getUid()).child("email").getValue(String.class);
 
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
     }
 }
